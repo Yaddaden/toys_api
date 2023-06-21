@@ -91,6 +91,22 @@ exports.modifyPublication = (req, res) => {
       } else if (results.length === 0) {
         res.status(401).send("Unauthorized to modify this publication");
       } else {
+        // Supprimer l'ancienne image
+        const getOldImageNameQuery =
+          "SELECT image FROM publications WHERE id = ? AND userId = ?";
+        connection.query(
+          getOldImageNameQuery,
+          [publicationId, userId],
+          (error, results) => {
+            if (error) {
+              res.status(500).send("Error retrieving old image name");
+            } else if (results.length > 0) {
+              const oldImageName = results[0].image;
+              deleteImage(oldImageName);
+            }
+          }
+        );
+
         let query;
         let queryValues;
         if (image) {
@@ -176,6 +192,7 @@ exports.deletePublication = (req, res) => {
   );
 };
 
+//Suppression des images
 const deleteImage = (imageName) => {
   const imagePath = `C:\\Users\\Pitch\\OneDrive\\Documents\\toys_api\\images\\${imageName}`;
 
