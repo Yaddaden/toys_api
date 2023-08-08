@@ -215,71 +215,66 @@ exports.createPublication = (req, res) => {
   const { nom, marque, age, description, etat, email, telephone, prix } =
     req.body;
 
-  const image = req.files; // Obtenez le fichier image téléchargé
+  const images = req.files; // Obtenez le fichier image téléchargé
+  //-----------------------------------
+  const imagesPaths = [];
+
+  images.forEach((image) => {
+    imagesPaths.push(image.path);
+  });
+
+  const imagesString = JSON.stringify(imagesPaths);
+  //-------------------------------------
+
   if (!req.auth.userId) {
     res
       .status(401)
       .json({ message: "tu n'est pas autorisé à créer l'annonce " });
   }
-  console.log(image);
-  if (!image || image.length === 0) {
-    res.status(400).json({ message: "Aucune image téléchargée." });
-    return;
-  }
 
-  const userId = req.auth.userId;
+  if (!images || images.length === 0) {
+    return res.status(400).json({ message: "Aucune image téléchargée." });
+  }
+  //-------------------------------------------------
+  // Vérifier le nombre d'images téléchargées
+  const maxImageCount = 5;
+  if (images.length > maxImageCount) {
+    return res.status(400).json({
+      message: `Vous ne pouvez télécharger que ${maxImageCount} images.`,
+    });
+  }
+  //------------------------------------------------
+
   const query =
     "INSERT INTO publications (nom, marque, age, description, etat, email, telephone, prix, image, userId) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-  const insertions = [];
-  console.log(image);
-  image.forEach((image) => {
-    insertions.push([
-      nom,
-      marque,
-      age,
-      description,
-      etat,
-      email,
-      telephone,
-      prix,
-      image.filename,
-      userId,
-    ]);
-  });
-  console.log(insertions);
-  console.log(image);
-  connection.beginTransaction((err) => {
+  const insertions = [
+    nom,
+    marque,
+    age,
+    description,
+    etat,
+    email,
+    telephone,
+    prix,
+    imagesString,
+    req.auth.userId,
+  ];
+
+  connection.query(query, insertions, (err) => {
     if (err) {
-      res.status(500).send("Error beginning database transaction");
-      return;
+      res.status(500).send("Error inserting publications into database");
     }
 
-    connection.query(query, insertions, (err, results) => {
-      if (err) {
-        connection.rollback(() => {
-          res.status(500).send("Error inserting publications into database");
-        });
-      } else {
-        connection.commit((err) => {
-          if (err) {
-            connection.rollback(() => {
-              res.status(500).send("Error committing database transaction");
-            });
-          } else {
-            res.status(200).json({
-              message:
-                "Les images ont été téléchargées et traitées avec succès.",
-            });
-          }
-        });
-      }
+    res.status(200).json({
+      message:
+        "Les images et l'annonce ont été téléchargées et traitées avec succès.",
     });
   });
 };
 
 //Affichage de toutes les annonces
 exports.getAllPublication = (req, res) => {
-  const query = "SELECT * FROM publications";
+  const query = "SELECT * FROM publications ORDER BY created_at DESC ";
   connection.query(query, (err, results) => {
     if (err) {
       res.status(500).send("Error retrieving publications from database");
@@ -310,6 +305,15 @@ exports.modifyPublication = (req, res) => {
   console.log(image);
 
   const publicationId = req.params.id;
+  //----------------------------------------------
+  // Vérifier le nombre d'images téléchargées
+  const maxImageCount = 5; // Limite souhaitée
+  if (image && image.length > maxImageCount) {
+    return res.status(400).json({
+      message: `Vous ne pouvez télécharger que ${maxImageCount} images.`,
+    });
+  }
+  //---------------------------------------------------
 
   //requête pour vérifier si l'utilisateur est propriétaire de la publication
   const userId = req.auth.userId;
@@ -346,7 +350,7 @@ exports.modifyPublication = (req, res) => {
 
         let query;
         let queryValues;
-        if (image) {
+        if (image && image.length > 0) {
           query =
             "UPDATE publications SET nom = ?, marque = ?, age = ?, description = ?, etat = ?, email = ?, telephone = ?, prix = ?, image = ? WHERE id = ? AND userId = ?";
 

@@ -31,3 +31,4 @@ ADD COLUMN image_id INT,
 ADD CONSTRAINT fk_publication_image
 FOREIGN KEY (image_id)
 REFERENCES images (image_id);
+

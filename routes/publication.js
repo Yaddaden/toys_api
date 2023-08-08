@@ -42,7 +42,7 @@ const auth = require("../middelware/auth");
 router.post(
   "/",
   auth,
-  upload.array("imageFile", 5),
+  upload.array("pictures", 5),
   publicationCtrl.createPublication
 );
 
@@ -55,7 +55,7 @@ router.get("/:id", publicationCtrl.getOnePublication);
 router.put(
   "/:id",
   auth,
-  upload.single("imageFile"),
+  upload.array("pictures", 5),
   publicationCtrl.modifyPublication
 );
 
