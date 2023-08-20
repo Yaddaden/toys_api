@@ -91,18 +91,10 @@ exports.modifyPublication = (req, res) => {
   const { nom, marque, age, description, etat, email, telephone, prix } =
     req.body;
 
-  const image = req.files;
-  console.log(image);
+  const newImages = req.files; // Nouvelles images à ajouter
+  console.log(newImages);
 
   const publicationId = req.params.id;
-
-  // Vérifier le nombre d'images téléchargées
-  const maxImageCount = 5; // Limite souhaitée
-  if (image && image.length > maxImageCount) {
-    return res.status(400).json({
-      message: `Vous ne pouvez télécharger que ${maxImageCount} images.`,
-    });
-  }
 
   //requête pour vérifier si l'utilisateur est propriétaire de la publication
   const userId = req.auth.userId;
@@ -123,47 +115,53 @@ exports.modifyPublication = (req, res) => {
       } else {
         let query;
         let queryValues;
-        if (image && image.length > 0) {
-          query =
-            "UPDATE publications SET nom = ?, marque = ?, age = ?, description = ?, etat = ?, email = ?, telephone = ?, prix = ?, image = ? WHERE id = ? AND userId = ?";
 
-          queryValues = [
-            nom,
-            marque,
-            age,
-            description,
-            etat,
-            email,
-            telephone,
-            prix,
-            image.filename,
-            publicationId,
-            userId,
-          ];
-        } else {
-          query =
-            "UPDATE publications SET nom = ?, marque = ?, age = ?, description = ?, etat = ?, email = ?, telephone = ?, prix = ? WHERE id = ? AND userId = ?";
-          queryValues = [
-            nom,
-            marque,
-            age,
-            description,
-            etat,
-            email,
-            telephone,
-            prix,
-            publicationId,
-            userId,
-          ];
-        }
-        console.log(userId, publicationId),
-          connection.query(query, queryValues, (err, results) => {
-            if (err) {
-              res.status(500).send("Error updating publication in database");
-            } else {
-              res.status(200).json(results);
+        connection.query(
+          "SELECT image FROM publications WHERE id = ?",
+          [publicationId],
+          (error, oldResults) => {
+            if (error) {
+              return res.status(500).send("Error retrieving old image paths");
             }
-          });
+            const oldImagePaths = JSON.parse(oldResults[0].image || "[]");
+            const newImagePaths = [...oldImagePaths];
+
+            if (newImages && newImages.length > 0) {
+              newImages.forEach((image) => {
+                newImagePaths.push(`images\\${path.basename(image.path)}`);
+              });
+            }
+
+            const imagesString = JSON.stringify(newImagePaths);
+
+            query =
+              "UPDATE publications SET nom = ?, marque = ?, age = ?, description = ?, etat = ?, email = ?, telephone = ?, prix = ?, image = ? WHERE id = ? AND userId = ?";
+
+            queryValues = [
+              nom,
+              marque,
+              age,
+              description,
+              etat,
+              email,
+              telephone,
+              prix,
+              imagesString,
+              publicationId,
+              userId,
+            ];
+
+            console.log(userId, publicationId);
+
+            connection.query(query, queryValues, (err, results) => {
+              if (err) {
+                res.status(500).send("Error updating publication in database");
+              } else {
+                res.status(200).json(results);
+              }
+            });
+          }
+        );
       }
     }
   );
@@ -252,7 +250,7 @@ exports.deletePublicationImage = (req, res) => {
     }
   );
 };
-//Suppression des images
+//Suppression dans le dossier images
 const deleteImage = (imageName) => {
   // Supprimer les crochets entourant le nom de l'image
   const cleanImageName = imageName.replace(/[\[\]"]/g, "");
