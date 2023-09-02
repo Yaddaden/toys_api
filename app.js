@@ -38,4 +38,8 @@ app.use((err, req, res, next) => {
     res.status(500).json({ message: "Une erreur interne s'est produite" });
   }
 });
+
+// const resetPasswordRouter = require("./routes/user");
+// app.use(resetPasswordRouter);
+
 module.exports = app;
