@@ -4,6 +4,7 @@ const useCtrl = require("../controllers/user");
 const authCtrl = require("../controllers/authController");
 
 // Route pour la création d'un utilisateur
+router.post("/oauth2callback", useCtrl.oauth2callback);
 router.post("/signup", useCtrl.signup);
 router.post("/login", useCtrl.login);
 

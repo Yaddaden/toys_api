@@ -32,3 +32,5 @@ ADD CONSTRAINT fk_publication_image
 FOREIGN KEY (image_id)
 REFERENCES images (image_id);
 
+ALTER TABLE publications
+CHANGE COLUMN email wilaya VARCHAR(255);

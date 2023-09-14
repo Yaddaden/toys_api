@@ -4,7 +4,7 @@ const connection = require("../db/db.mysql");
 const fs = require("fs");
 const path = require("path");
 exports.createPublication = (req, res) => {
-  const { nom, marque, age, description, etat, email, telephone, prix } =
+  const { nom, marque, age, description, etat, wilaya, telephone, prix } =
     req.body;
 
   const images = req.files; // Obtenez le fichier image téléchargé
@@ -36,14 +36,14 @@ exports.createPublication = (req, res) => {
   }
 
   const query =
-    "INSERT INTO publications (nom, marque, age, description, etat, email, telephone, prix, image, userId) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    "INSERT INTO publications (nom, marque, age, description, etat, wilaya, telephone, prix, image, userId) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
   const insertions = [
     nom,
     marque,
     age,
     description,
     etat,
-    email,
+    wilaya,
     telephone,
     prix,
     imagesString,
@@ -88,7 +88,7 @@ exports.getOnePublication = (req, res) => {
 //Modifier
 
 exports.modifyPublication = (req, res) => {
-  const { nom, marque, age, description, etat, email, telephone, prix } =
+  const { nom, marque, age, description, etat, wilaya, telephone, prix } =
     req.body;
 
   const newImages = req.files; // Nouvelles images à ajouter
@@ -135,7 +135,7 @@ exports.modifyPublication = (req, res) => {
             const imagesString = JSON.stringify(newImagePaths);
 
             query =
-              "UPDATE publications SET nom = ?, marque = ?, age = ?, description = ?, etat = ?, email = ?, telephone = ?, prix = ?, image = ? WHERE id = ? AND userId = ?";
+              "UPDATE publications SET nom = ?, marque = ?, age = ?, description = ?, etat = ?, wilaya = ?, telephone = ?, prix = ?, image = ? WHERE id = ? AND userId = ?";
 
             queryValues = [
               nom,
@@ -143,7 +143,7 @@ exports.modifyPublication = (req, res) => {
               age,
               description,
               etat,
-              email,
+              wilaya,
               telephone,
               prix,
               imagesString,

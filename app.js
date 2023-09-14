@@ -20,8 +20,6 @@ const userRoutes = require("./routes/user");
 // Utilisation des routes
 app.use("/users", userRoutes);
 
-// // Route pour la connexion
-
 //Publication
 
 const publicationRoutes = require("./routes/publication");
